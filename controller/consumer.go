@@ -1,54 +1,30 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/Shopify/sarama"
 )
 
-type consumerGroupHandler struct {
+type ConsumerGroupHandler struct {
 }
 
-func (consumerGroupHandler) Setup(sarama.ConsumerGroupSession) error {
+func (ConsumerGroupHandler) Setup(sarama.ConsumerGroupSession) error {
 	return nil
 }
-func (consumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error { return nil }
+func (ConsumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error { return nil }
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
-func (consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
 		session.MarkMessage(msg, "")
 	}
 	return nil
 }
-func ConsumeGroup(brokers []string, topics []string) {
-	// 配置
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = false
-	config.Version = sarama.V0_10_2_0                     // specify appropriate version
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest // 未找到组消费位移的时候从哪边开始消费
 
-	//创建消费组
-	consumergroup, err := sarama.NewConsumerGroup(brokers, "consumer-group", config)
-	if err != nil {
-		fmt.Printf("new consumergroup error: %s\n", err.Error())
-		return
-	}
-	defer consumergroup.Close()
-
-	for {
-		err := consumergroup.Consume(context.Background(), topics, consumerGroupHandler{})
-		if err != nil {
-			fmt.Printf("consumer error: %s\n", err.Error())
-			return
-		}
-	}
-}
 func Consume(brokers []string, topic string) {
-
 	consumer, err := sarama.NewConsumer(brokers, sarama.NewConfig())
 
 	if err != nil {

@@ -2,28 +2,24 @@ package main
 
 import (
 	"dockermysql/controller"
-	"dockermysql/dal"
-	"dockermysql/dal/query"
+	"dockermysql/infra/dao"
+	"dockermysql/infra/mq"
 	"dockermysql/routers"
 	"os"
 )
 
-const MySQLDSN = "root:123456@tcp(127.0.0.1:3307)/Shop?charset=utf8mb4&parseTime=True"
+func Init() {
+	dao.Init()
 
-func init() {
-	dal.DB = dal.ConnectDB(MySQLDSN).Debug()
+	go mq.InitConsumer([]string{"127.0.0.1:9092"}, []string{"topic1", "topic2", "topic3"}, &controller.ConsumerGroupHandler{})
+	// other consumer
+	// go mq.InitConsumer([]string{"127.0.0.1:9092"}, []string{"topic1", "topic2", "topic3"},)
 }
 
 func main() {
+	Init()
+
 	port := os.Args[1]
-	query.SetDefault(dal.DB)
-	var address = []string{"127.0.0.1:9092"}
-	topics := []string{"topic1", "topic2", "topic3"}
-	// go controller.Produce(address, topics)
-
-	go controller.ConsumeGroup(address, topics)
-
-	// go controller.Consume(address, topics[0])
 	r := routers.SetupRouter()
 	r.Run(":" + port)
 }

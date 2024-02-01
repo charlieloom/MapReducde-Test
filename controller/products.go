@@ -1,8 +1,8 @@
 package controller
 
 import (
-	dao "dockermysql/Dao"
 	model "dockermysql/dal/model"
+	"dockermysql/infra/dao"
 	model2 "dockermysql/model"
 	"fmt"
 	"net/http"
