@@ -39,7 +39,13 @@ func ConsumeGroup(brokers []string, topics []string) {
 	}
 	defer consumergroup.Close()
 
-	consumergroup.Consume(context.Background(), topics, consumerGroupHandler{})
+	for {
+		err := consumergroup.Consume(context.Background(), topics, consumerGroupHandler{})
+		if err != nil {
+			fmt.Printf("consumer error: %s\n", err.Error())
+			return
+		}
+	}
 }
 func Consume(brokers []string, topic string) {
 
