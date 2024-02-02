@@ -80,7 +80,7 @@ func ExportProducts(c *gin.Context) {
 	//关闭生产者
 	defer producer.Close()
 
-	log.Println("开始时间")
+	log.Println("map开始")
 	start := time.Now()
 	f := excelize.NewFile()
 	// 保存文件
@@ -112,8 +112,7 @@ func ExportProducts(c *gin.Context) {
 		//发送消息
 		producer.Input() <- msg
 	}
-	cost := time.Since(start)
-	fmt.Printf("花费时间：[%s]", cost)
+	fmt.Printf("map花费时间[%vs]", time.Since(start).Seconds())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err,
