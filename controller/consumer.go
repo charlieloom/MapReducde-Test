@@ -22,7 +22,7 @@ func (ConsumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error { return 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
+		// log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
 		var queryMsg model2.QueryMsg
 		err := json.Unmarshal([]byte(msg.Value), &queryMsg)
 		if err != nil {
@@ -50,11 +50,11 @@ func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, cl
 			Value: sarama.ByteEncoder(jsonData),
 		}
 		//发送消息
-		part, offset, err := producer.SendMessage(newmsg)
+		_, _, err = producer.SendMessage(newmsg)
 		if err != nil {
 			log.Printf("send querymsgage error :%s \n", err.Error())
 		} else {
-			fmt.Printf("export msg send SUCCESS:topic=%s  patition=%d, offset=%d \n", topics[0], part, offset)
+			// fmt.Printf("export msg send SUCCESS:topic=%s  patition=%d, offset=%d \n", topics[0], part, offset)
 		}
 		session.MarkMessage(msg, "")
 	}

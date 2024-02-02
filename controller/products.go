@@ -4,7 +4,6 @@ import (
 	model "dockermysql/dal/model"
 	"dockermysql/infra/dao"
 	model2 "dockermysql/model"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -95,28 +95,27 @@ func ExportProducts(c *gin.Context) {
 	}()
 	var err error
 	offest := (condition.Page - 1) * condition.PageSize //初始偏移
-	for i := 0; i < condition.PageSize; i += 200 {
+	for i := 0; i < condition.PageSize; i += 100 {
 		value := model2.QueryMsg{
 			Condition: condition,
 			Offset:    i + offest, //当前偏移
-			Limit:     200,
+			Limit:     100,
 			Row:       i,
 			File:      "products.xlsx",
 		}
 
-		jsonData, _ := json.Marshal(value)
+		jsonData, _ := jsoniter.Marshal(value)
 		msg := &sarama.ProducerMessage{
 			Topic: topics[0],
 			Value: sarama.ByteEncoder(jsonData),
 		}
 		//发送消息
-		part, offset, err := producer.SendMessage(msg)
+		_, _, err := producer.SendMessage(msg)
 		if err != nil {
 			log.Printf("send message error :%s \n", err.Error())
 		} else {
-			log.Printf("SUCCESS:topic=%s  patition=%d, value=%v, offset=%d \n", topics[0], part, msg.Value, offset)
+			// log.Printf("SUCCESS:topic=%s  patition=%d, offset=%d \n", topics[0], part, offset)
 		}
-		time.Sleep(2 * time.Second)
 	}
 	cost := time.Since(start)
 	fmt.Printf("花费时间：[%s]", cost)

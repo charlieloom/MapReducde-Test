@@ -2,16 +2,12 @@ package controller
 
 import (
 	model2 "dockermysql/model"
-	"encoding/json"
 	"fmt"
-	"log"
-	"sync"
 
 	"github.com/Shopify/sarama"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/xuri/excelize/v2"
 )
-
-var rwMut sync.RWMutex
 
 type ExportData struct {
 }
@@ -27,12 +23,18 @@ func (ExportData) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 	for msg := range claim.Messages() {
 		// log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
 		var exportMsg model2.ExportMsg
-		err := json.Unmarshal([]byte(msg.Value), &exportMsg)
+		err := jsoniter.Unmarshal([]byte(msg.Value), &exportMsg)
 		if err != nil {
 			fmt.Println("unmarshal error:", err)
 			return err
 		}
-		rwMut.Lock()
+		// b := make([]byte, 64)
+		// b = b[:runtime.Stack(b, false)]
+		// b = bytes.TrimPrefix(b, []byte("goroutine "))
+		// b = b[:bytes.IndexByte(b, ' ')]
+		// n, _ := strconv.ParseUint(string(b), 10, 64)
+
+		// log.Printf("协程ID %d", n)
 		//打开文件
 		f, err := excelize.OpenFile(exportMsg.File)
 		// f := excelize.NewFile()
@@ -80,8 +82,7 @@ func (ExportData) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			return err
 		}
 		f.Close()
-		rwMut.Unlock()
-		log.Printf("保存成功: topic = %s, partition = %d, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Offset, msg.Timestamp)
+		// log.Printf("保存成功: topic = %s, partition = %d, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Offset, msg.Timestamp)
 		session.MarkMessage(msg, "")
 	}
 	return nil

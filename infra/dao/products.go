@@ -24,7 +24,7 @@ func GetAllproducts(condition *model2.Condition, offest int, limit int) ([]*mode
 	if condition.Category != "" {
 		query = query.Where(p.Category.Eq(string(condition.Category)))
 	}
-	products, err := query.Debug().Limit(limit).Offset(offest).Find()
+	products, err := query.Limit(limit).Offset(offest).Find()
 	if err != nil {
 		return nil, err
 	}
