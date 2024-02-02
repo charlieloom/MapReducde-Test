@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func GetAllproducts(condition *model2.Condition, offest int) ([]*model.Product, error) {
+func GetAllproducts(condition *model2.Condition, offest int, limit int) ([]*model.Product, error) {
 	p := query.Product
 	query := p.WithContext(context.Background()).Where()
 	if condition.Id != 0 {
@@ -24,7 +24,7 @@ func GetAllproducts(condition *model2.Condition, offest int) ([]*model.Product, 
 	if condition.Category != "" {
 		query = query.Where(p.Category.Eq(string(condition.Category)))
 	}
-	products, err := query.Debug().Limit(50000).Offset(offest).Find()
+	products, err := query.Debug().Limit(limit).Offset(offest).Find()
 	if err != nil {
 		return nil, err
 	}

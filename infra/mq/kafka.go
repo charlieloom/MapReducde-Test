@@ -12,7 +12,7 @@ func InitConsumer(brokers []string, topics []string, handler sarama.ConsumerGrou
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = false
 	config.Version = sarama.V0_10_2_0                     // specify appropriate version
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest // 未找到组消费位移的时候从哪边开始消费
+	config.Consumer.Offsets.Initial = sarama.OffsetNewest // 未找到组消费位移的时候从哪边开始消费
 
 	//创建消费组
 	consumergroup, err := sarama.NewConsumerGroup(brokers, "consumer-group", config)

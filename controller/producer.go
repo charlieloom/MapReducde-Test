@@ -11,11 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Produce(c *gin.Context) {
-
-	var address = []string{"127.0.0.1:9092"}
-	topics := []string{"topic1", "topic2", "topic3"}
-
+func InitProducer(address []string) sarama.SyncProducer {
 	// 配置
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
@@ -23,8 +19,17 @@ func Produce(c *gin.Context) {
 	producer, err := sarama.NewSyncProducer(address, config)
 	if err != nil {
 		log.Printf("new sync producer error : %s \n", err.Error())
-		return
+		return nil
 	}
+
+	return producer
+}
+func Produce(c *gin.Context) {
+
+	var address = []string{"127.0.0.1:9092"}
+	topics := []string{"topic1", "topic2", "topic3"}
+
+	producer := InitProducer(address)
 	//关闭生产者
 	defer producer.Close()
 

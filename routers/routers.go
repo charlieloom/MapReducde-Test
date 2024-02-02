@@ -20,7 +20,8 @@ func SetupRouter() *gin.Engine {
 		}
 		c.Next()
 	})
-	r.GET("/ProductList", controller.GetAllproducts)
+	r.GET("/PageQuery", controller.PageQuery)
 	r.GET("/Produce", controller.Produce)
+	r.GET("/ExportProducts", controller.ExportProducts)
 	return r
 }
