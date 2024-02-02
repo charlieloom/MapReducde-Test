@@ -95,11 +95,11 @@ func ExportProducts(c *gin.Context) {
 	}()
 	var err error
 	offest := (condition.Page - 1) * condition.PageSize //初始偏移
-	for i := 0; i < condition.PageSize; i += 100 {
+	for i := 0; i < condition.PageSize; i += 200 {
 		value := model2.QueryMsg{
 			Condition: condition,
 			Offset:    i + offest, //当前偏移
-			Limit:     100,
+			Limit:     200,
 			Row:       i,
 			File:      "products.xlsx",
 		}
@@ -110,12 +110,7 @@ func ExportProducts(c *gin.Context) {
 			Value: sarama.ByteEncoder(jsonData),
 		}
 		//发送消息
-		_, _, err := producer.SendMessage(msg)
-		if err != nil {
-			log.Printf("send message error :%s \n", err.Error())
-		} else {
-			// log.Printf("SUCCESS:topic=%s  patition=%d, offset=%d \n", topics[0], part, offset)
-		}
+		producer.Input() <- msg
 	}
 	cost := time.Since(start)
 	fmt.Printf("花费时间：[%s]", cost)

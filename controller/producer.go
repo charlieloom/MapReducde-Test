@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -11,12 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitProducer(address []string) sarama.SyncProducer {
+func InitProducer(address []string) sarama.AsyncProducer {
 	// 配置
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.Timeout = 5 * time.Second
-	producer, err := sarama.NewSyncProducer(address, config)
+	producer, err := sarama.NewAsyncProducer(address, config)
 	if err != nil {
 		log.Printf("new sync producer error : %s \n", err.Error())
 		return nil
@@ -49,12 +48,6 @@ func Produce(c *gin.Context) {
 		}
 
 		//发送消息
-		part, offset, err := producer.SendMessage(msg)
-		if err != nil {
-			log.Printf("send message error :%s \n", err.Error())
-		} else {
-			fmt.Printf("SUCCESS:topic=%s  patition=%d, value=%v, offset=%d \n", topics[pos], part, value, offset)
-		}
-		time.Sleep(2 * time.Second)
+		producer.Input() <- msg
 	}
 }

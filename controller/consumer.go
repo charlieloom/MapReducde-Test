@@ -3,11 +3,10 @@ package controller
 import (
 	"dockermysql/infra/dao"
 	model2 "dockermysql/model"
-	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/Shopify/sarama"
+	jsoniter "github.com/json-iterator/go"
 )
 
 type ConsumerGroupHandler struct {
@@ -21,41 +20,40 @@ func (ConsumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error { return 
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	var address = []string{"127.0.0.1:9092"}
+	topics := []string{"topic2"}
+	producer := InitProducer(address)
+	//关闭生产者
+	defer producer.Close()
+
 	for msg := range claim.Messages() {
 		// log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
 		var queryMsg model2.QueryMsg
-		err := json.Unmarshal([]byte(msg.Value), &queryMsg)
+		err := jsoniter.Unmarshal(msg.Value, &queryMsg)
 		if err != nil {
 			fmt.Println("unmarshal error:", err)
 			return err
 		}
+
 		productlist, err := dao.GetAllproducts(&queryMsg.Condition, queryMsg.Offset, queryMsg.Limit)
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
-		var address = []string{"127.0.0.1:9092"}
-		topics := []string{"topic2"}
-		producer := InitProducer(address)
-		//关闭生产者
-		defer producer.Close()
+
 		value := model2.ExportMsg{
 			Productlist: productlist,
 			File:        queryMsg.File,
 			Row:         queryMsg.Row,
 		}
-		jsonData, _ := json.Marshal(value)
+		jsonData, _ := jsoniter.Marshal(value)
+		
 		newmsg := &sarama.ProducerMessage{
 			Topic: topics[0],
 			Value: sarama.ByteEncoder(jsonData),
 		}
 		//发送消息
-		_, _, err = producer.SendMessage(newmsg)
-		if err != nil {
-			log.Printf("send querymsgage error :%s \n", err.Error())
-		} else {
-			// fmt.Printf("export msg send SUCCESS:topic=%s  patition=%d, offset=%d \n", topics[0], part, offset)
-		}
+		producer.Input() <- newmsg
 		session.MarkMessage(msg, "")
 	}
 	return nil
