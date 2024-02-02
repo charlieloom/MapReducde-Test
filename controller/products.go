@@ -95,11 +95,11 @@ func ExportProducts(c *gin.Context) {
 	}()
 	var err error
 	offest := (condition.Page - 1) * condition.PageSize //初始偏移
-	for i := 0; i < condition.PageSize; i += 2500 {
+	for i := 0; i < condition.PageSize; i += 200 {
 		value := model2.QueryMsg{
 			Condition: condition,
 			Offset:    i + offest, //当前偏移
-			Limit:     2500,
+			Limit:     200,
 			Row:       i,
 			File:      "products.xlsx",
 		}

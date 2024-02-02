@@ -5,7 +5,10 @@ import (
 	"dockermysql/infra/dao"
 	"dockermysql/infra/mq"
 	"dockermysql/routers"
+	"fmt"
 	"os"
+
+	"github.com/xuri/excelize/v2"
 )
 
 func Init(isExport string) {
@@ -18,6 +21,13 @@ func Init(isExport string) {
 }
 
 func main() {
+	_, err := excelize.OpenFile("products.xlsx")
+	// f := excelize.NewFile()
+	if err != nil {
+		fmt.Println("mian Error:", err)
+		fmt.Println("file")
+		return
+	}
 	Init(os.Args[2])
 	port := os.Args[1]
 	r := routers.SetupRouter()

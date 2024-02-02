@@ -1,7 +1,6 @@
 package routers
 
 import (
-	controller "dockermysql/controller"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,8 +19,8 @@ func SetupRouter() *gin.Engine {
 		}
 		c.Next()
 	})
-	r.GET("/PageQuery", controller.PageQuery)
-	r.GET("/Produce", controller.Produce)
-	r.GET("/ExportProducts", controller.ExportProducts)
+	// r.GET("/PageQuery", controller.PageQuery)
+	// r.GET("/Produce", controller.Produce)
+	// r.GET("/ExportProducts", controller.ExportProducts)
 	return r
 }
