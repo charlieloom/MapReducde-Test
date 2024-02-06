@@ -10,12 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitProducer(address []string) sarama.AsyncProducer {
+func InitProducer(address []string) sarama.SyncProducer {
 	// 配置
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.Timeout = 5 * time.Second
-	producer, err := sarama.NewAsyncProducer(address, config)
+	// producer, err := sarama.NewAsyncProducer(address, config)
+	producer, err := sarama.NewSyncProducer(address, config)
 	if err != nil {
 		log.Printf("new sync producer error : %s \n", err.Error())
 		return nil
@@ -48,6 +49,12 @@ func Produce(c *gin.Context) {
 		}
 
 		//发送消息
-		producer.Input() <- msg
+		// producer.Input() <- msg
+		partition, offset, err := producer.SendMessage(msg)
+		if err != nil {
+			log.Printf("FAILED to send message: %s\n", err)
+		} else {
+			log.Printf("> message sent to partition %d at offset %d\n", partition, offset)
+		}
 	}
 }

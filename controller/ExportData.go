@@ -3,6 +3,8 @@ package controller
 import (
 	model2 "dockermysql/model"
 	"fmt"
+	"log"
+	"unsafe"
 
 	"github.com/Shopify/sarama"
 	jsoniter "github.com/json-iterator/go"
@@ -21,7 +23,7 @@ func (ExportData) Cleanup(sarama.ConsumerGroupSession) error { return nil }
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (ExportData) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
-		// log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
+		log.Printf("export msg rev: topic = %s, partition = %d,offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Offset, msg.Timestamp)
 		var exportMsg model2.ExportMsg
 		err := jsoniter.Unmarshal([]byte(msg.Value), &exportMsg)
 		if err != nil {
@@ -68,10 +70,10 @@ func (ExportData) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 		// 	fmt.Println("Error:", err)
 		// 	return err
 		// }
-
+		log.Printf("store Productlist sizeof : %d", unsafe.Sizeof(exportMsg.Productlist))
 		for idx, product := range exportMsg.Productlist {
 			row := []interface{}{product.ID, product.Name, product.Description, product.Category, product.Price, product.StockQuantity, product.CountryOfManufacture, product.DateAdded, product.LastUpdated, product.UnitsSold, product.NumberOfReviews, product.AverageRating}
-
+			log.Printf("store &Row sizeof : %d", unsafe.Sizeof(&row))
 			if err := f.SetSheetRow("Sheet1", fmt.Sprintf("A%d", idx+1+exportMsg.Row), &row); err != nil {
 				fmt.Println("Error setting sheet row:", err)
 				break
@@ -82,7 +84,7 @@ func (ExportData) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			return err
 		}
 		f.Close()
-		// log.Printf("保存成功: topic = %s, partition = %d, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Offset, msg.Timestamp)
+		log.Printf("保存成功: topic = %s, partition = %d, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Offset, msg.Timestamp)
 		session.MarkMessage(msg, "")
 	}
 	return nil

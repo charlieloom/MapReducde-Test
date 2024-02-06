@@ -110,7 +110,12 @@ func ExportProducts(c *gin.Context) {
 			Value: sarama.ByteEncoder(jsonData),
 		}
 		//发送消息
-		producer.Input() <- msg
+		_, _, err := producer.SendMessage(msg)
+		if err != nil {
+			log.Printf("FAILED to send message: %s\n", err)
+		} else {
+			log.Printf("Message send %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
+		}
 	}
 	fmt.Printf("map花费时间[%vs]", time.Since(start).Seconds())
 	if err != nil {

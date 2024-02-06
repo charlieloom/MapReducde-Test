@@ -4,6 +4,7 @@ import (
 	"dockermysql/infra/dao"
 	model2 "dockermysql/model"
 	"fmt"
+	"log"
 
 	"github.com/Shopify/sarama"
 	jsoniter "github.com/json-iterator/go"
@@ -27,7 +28,8 @@ func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, cl
 	defer producer.Close()
 
 	for msg := range claim.Messages() {
-		// log.Printf("Message claimed: topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
+		//接受到查询任务
+		log.Printf("need select : topic = %s, partition = %d, value = %s, offset= %d, timestamp = %v, ", msg.Topic, msg.Partition, msg.Value, msg.Offset, msg.Timestamp)
 		var queryMsg model2.QueryMsg
 		err := jsoniter.Unmarshal(msg.Value, &queryMsg)
 		if err != nil {
@@ -47,13 +49,19 @@ func (ConsumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, cl
 			Row:         queryMsg.Row,
 		}
 		jsonData, _ := jsoniter.Marshal(value)
-		
+
 		newmsg := &sarama.ProducerMessage{
 			Topic: topics[0],
 			Value: sarama.ByteEncoder(jsonData),
 		}
-		//发送消息
-		producer.Input() <- newmsg
+		//发送查询后的数据
+		_, _, err = producer.SendMessage(newmsg)
+		if err != nil {
+			log.Printf("FAILED to send message: %s\n", err)
+		} else {
+
+			log.Printf("export msg send: topic = %s, partition = %d, offset= %d, timestamp = %v, ", newmsg.Topic, newmsg.Partition, newmsg.Offset, newmsg.Timestamp)
+		}
 		session.MarkMessage(msg, "")
 	}
 	return nil
