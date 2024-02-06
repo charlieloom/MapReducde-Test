@@ -82,17 +82,17 @@ func ExportProducts(c *gin.Context) {
 
 	log.Println("map开始")
 	start := time.Now()
-	f := excelize.NewFile()
+	// f := excelize.NewFile()
 	// 保存文件
-	if err := f.SaveAs("products.xlsx"); err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
+	// if err := f.SaveAs("products.xlsx"); err != nil {
+	// 	fmt.Println("Error:", err)
+	// 	return
+	// }
+	// defer func() {
+	// 	if err := f.Close(); err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// }()
 	var err error
 	offest := (condition.Page - 1) * condition.PageSize //初始偏移
 	for i := 0; i < condition.PageSize; i += 200 {
@@ -101,7 +101,7 @@ func ExportProducts(c *gin.Context) {
 			Offset:    i + offest, //当前偏移
 			Limit:     200,
 			Row:       i,
-			File:      "products.xlsx",
+			File:      "products.txt",
 		}
 
 		jsonData, _ := jsoniter.Marshal(value)
